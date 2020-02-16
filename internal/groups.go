@@ -24,7 +24,7 @@ func (g *Group) AddPerson(person *Person) {
 	g.General[person.Name] = person
 }
 
-func (g *Group) Event(event Event) {
+func (g *Group) Event(event *Event) {
 	switch event.Kind {
 	case CONTAGIOUS:
 		g.Contagious[event.Name] = g.General[event.Name]
@@ -46,11 +46,15 @@ func (g *Group) Event(event Event) {
 }
 
 func (g *Group) Encounters() int {
+	if len(g.General) == 0 {
+		return 0
+	}
+
 	encounters := random.Intn(len(g.General))
 
 	// Set a maximium
-	if encounters > 100 {
-		encounters = 100
+	if encounters > 250 {
+		encounters = 250
 	}
 
 	return encounters
@@ -128,16 +132,53 @@ func NewCity(householdCount int, commuteLineCount int, companyCount int) *City {
 	return city
 }
 
+func (c *City) ProcessDay() {
+	// Random encounters throughout the day
+	c.Population.ProcessSickEncounters()
+
+	// Encounters at home
+	for _, household := range c.HouseHolds {
+		household.ProcessSickEncounters()
+	}
+
+	// Encounters on way to work
+	for _, company := range c.Companies {
+		company.ProcessSickEncounters()
+	}
+
+	// Encounters at work
+	for _, commute := range c.CommuteLines {
+		commute.ProcessSickEncounters()
+	}
+
+	// Encounters on way back from work
+	for _, commute := range c.CommuteLines {
+		commute.ProcessSickEncounters()
+	}
+}
+
 // Add person to city, random household and if they work, random commute line and random company
-func (c *City) AddPerson(person *Person) {
+func (c *City) AddPerson(person *Person) []EventFn {
+	eventFns := []EventFn{}
 	c.Population.AddPerson(person)
+	eventFns = append(eventFns, c.Population.Event)
 
 	// Add to random household
-	c.HouseHolds[random.Intn(len(c.HouseHolds))].AddPerson(person)
+	household := c.HouseHolds[random.Intn(len(c.HouseHolds))]
+	household.AddPerson(person)
+	eventFns = append(eventFns, household.Event)
 
 	// Assume 80% of population work or in school
 	if random.Float64() < 0.8 {
-		c.CommuteLines[random.Intn(len(c.CommuteLines))].AddPerson(person)
-		c.Companies[random.Intn(len(c.Companies))].AddPerson(person)
+		line := c.CommuteLines[random.Intn(len(c.CommuteLines))]
+		line.AddPerson(person)
+
+		company := c.Companies[random.Intn(len(c.Companies))]
+		company.AddPerson(person)
+
+		eventFns = append(eventFns, line.Event)
+		eventFns = append(eventFns, company.Event)
 	}
+
+	return eventFns
 }

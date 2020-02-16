@@ -23,7 +23,7 @@ type Person struct {
 
 	createInfection  CreateInfection
 	persistInfection UpdateInfection
-	events           EventFn
+	events           []EventFn
 
 	Infection *Infection
 }
@@ -34,7 +34,7 @@ func NewPerson(createInfection CreateInfection, persistInfection UpdateInfection
 		Alive:            true,
 		createInfection:  createInfection,
 		persistInfection: persistInfection,
-		events:           events,
+		events:           []EventFn{events},
 	}
 }
 
@@ -42,33 +42,47 @@ func (p *Person) Infect() {
 	if !p.Infected && !p.Immune {
 		p.createInfection(p.UpdateInfection)
 		p.Infected = true
-		p.events(NewEvent(p.Name, INFECTED))
+
 	}
 }
 
 func (p *Person) Kill() {
 	p.Alive = false
-	p.events(NewEvent(p.Name, DEATH))
+	p.Events(NewEvent(p.Name, DEATH))
+}
+
+func (p *Person) AddEventFns(eventFns []EventFn) {
+	eventFns = append(eventFns, p.events...)
+	p.events = eventFns
+}
+
+func (p *Person) Events(event *Event) {
+	for _, eventFn := range p.events {
+		eventFn(event)
+	}
 }
 
 func (p *Person) UpdateInfection(infection *Infection) {
-	p.Infection = infection
+	if p.Infection == nil {
+		p.Events(NewEvent(p.Name, INFECTED))
+		p.Infection = infection
+	}
 
 	if !p.Contagious && infection.Contagious() {
 		p.Contagious = true
-		p.events(NewEvent(p.Name, CONTAGIOUS))
+		p.Events(NewEvent(p.Name, CONTAGIOUS))
 	}
 
 	if p.Contagious && !infection.Contagious() {
 		p.Contagious = false
-		p.events(NewEvent(p.Name, UNCONTAGIOUS))
+		p.Events(NewEvent(p.Name, UNCONTAGIOUS))
 	}
 
 	p.Contagious = infection.Contagious()
 
 	if !p.Sick && infection.Active() {
 		p.Sick = true
-		p.events(NewEvent(p.Name, SICK))
+		p.Events(NewEvent(p.Name, SICK))
 	}
 
 	if infection.Active() && infection.KillPatient() {
@@ -83,7 +97,7 @@ func (p *Person) UpdateInfection(infection *Infection) {
 	if infection.Complete() {
 		p.Infected = false
 		p.Sick = false
-		p.events(NewEvent(p.Name, RECOVERED))
+		p.Events(NewEvent(p.Name, RECOVERED))
 		p.Infection = nil
 		return
 	}

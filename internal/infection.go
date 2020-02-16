@@ -1,7 +1,6 @@
 package internal
 
 import (
-	"fmt"
 	"math/rand"
 	"time"
 )
@@ -107,40 +106,37 @@ func (i *Infection) Progress() bool {
 }
 
 type InfectionManager struct {
-	virus            *Virus
-	activeInfections chan *Infection
+	virus      *Virus
+	infections chan *Infection
 }
 
 func NewInfectionManager(virus *Virus) *InfectionManager {
-	activeInfections := make(chan *Infection, 1e6)
+	infections := make(chan *Infection, 1e6)
 
 	return &InfectionManager{
-		virus:            virus,
-		activeInfections: activeInfections,
+		virus:      virus,
+		infections: infections,
 	}
 }
 
 func (i *InfectionManager) CreateInfection(updateInfection UpdateInfection) {
-	i.activeInfections <- NewInfection(i.virus, updateInfection)
+	i.infections <- NewInfection(i.virus, updateInfection)
 }
 
 func (i *InfectionManager) PersistInfection(infection *Infection) {
-	i.activeInfections <- infection
+	i.infections <- infection
 }
 
-func (i *InfectionManager) ProcessDay() error {
-	count := 0
-	select {
-	case infection := <-i.activeInfections:
-		count++
-		infection.Progress()
-	default:
-		break
-	}
+func (i *InfectionManager) ProcessDay() {
+	currentInfections := i.infections
+	i.infections = make(chan *Infection, 1e6)
 
-	if count == 0 {
-		return fmt.Errorf("Pandemic is over")
+	for {
+		select {
+		case infection := <-currentInfections:
+			infection.Progress()
+		default:
+			return
+		}
 	}
-
-	return nil
 }

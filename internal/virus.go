@@ -78,6 +78,7 @@ func (v *Virus) CalculateTransmissionProbability(averageContacts int) float64 {
 	}
 
 	v.TransmissionProbability = v.R0 / float64(v.ContagiousPeriod()*averageContacts)
+	fmt.Println(v.TransmissionProbability)
 	return v.TransmissionProbability
 }
 
