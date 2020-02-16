@@ -8,6 +8,7 @@ import (
 
 type UpdateInfection func(infection *Infection)
 type CreateInfection func(updateInfection UpdateInfection)
+type EventFn func(event Event)
 
 type Person struct {
 	Name     string
@@ -20,15 +21,19 @@ type Person struct {
 	Active bool
 	Alive  bool
 
-	createInfection CreateInfection
+	createInfection  CreateInfection
+	persistInfection UpdateInfection
+	events           EventFn
 }
 
-func NewPerson(createInfection CreateInfection) *Person {
+func NewPerson(createInfection CreateInfection, persistInfection UpdateInfection, events EventFn) *Person {
 	return &Person{
-		Name:            uuid.New().String(),
-		Active:          true,
-		Alive:           true,
-		createInfection: createInfection,
+		Name:             uuid.New().String(),
+		Active:           true,
+		Alive:            true,
+		createInfection:  createInfection,
+		persistInfection: persistInfection,
+		events:           events,
 	}
 }
 
@@ -36,16 +41,13 @@ func (p *Person) Infect() {
 	if !p.Infected && !p.Immune {
 		p.createInfection(p.UpdateInfection)
 		p.Infected = true
-		// TODO(Sam): Broadcast events
+		p.events(INFECTED)
 	}
 }
 
 func (p *Person) Kill() {
-	fmt.Println("RIP")
 	p.Alive = false
-
-	// TODO(Sam): Broadcast events
-	panic("RIP")
+	p.events(DEATH)
 }
 
 func (p *Person) UpdateInfection(infection *Infection) {
@@ -56,6 +58,7 @@ func (p *Person) UpdateInfection(infection *Infection) {
 
 	if infection.Active() && infection.KillPatient() {
 		p.Kill()
+		return
 	}
 
 	if infection.Recovery() {
@@ -65,7 +68,11 @@ func (p *Person) UpdateInfection(infection *Infection) {
 	if infection.Complete() {
 		p.Infected = false
 		p.Active = true
+		p.events(RECOVERED)
+		return
 	}
+
+	p.persistInfection(infection)
 }
 
 func (p *Person) Status() string {

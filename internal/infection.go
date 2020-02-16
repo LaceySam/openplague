@@ -91,7 +91,6 @@ func (i *Infection) KillPatient() bool {
 		return false
 	}
 
-	fmt.Println(random.Float64())
 	if random.Float64() < i.MortalityProbability {
 		return true
 	}
@@ -123,21 +122,19 @@ func (i *InfectionManager) CreateInfection(updateInfection UpdateInfection) {
 	i.activeInfections <- NewInfection(i.virus, updateInfection)
 }
 
+func (i *InfectionManager) PersistInfection(infection *Infection) {
+	i.activeInfections <- infection
+}
+
 func (i *InfectionManager) ProcessDay() error {
 	count := 0
-	activeInfections := make(chan *Infection, 1e6)
 	select {
 	case infection := <-i.activeInfections:
 		count++
-		complete := infection.Progress()
-		if !complete {
-			activeInfections <- infection
-		}
+		infection.Progress()
 	default:
 		break
 	}
-
-	i.activeInfections = activeInfections
 
 	if count == 0 {
 		return fmt.Errorf("Pandemic is over")
