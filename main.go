@@ -12,7 +12,7 @@ func main() {
 	virusName := "COVID-19"
 
 	virus := internal.NewVirus(virusName, 3.2, 0.5, 14, true, 14, true, 7, true)
-	fmt.Printf("Created %s\n", virus.Desc())
+	fmt.Printf("Created %s\n\n", virus.Desc())
 
 	infectionManager := internal.NewInfectionManager(virus)
 	stats := internal.NewStatistics(1)

@@ -8,7 +8,7 @@ import (
 
 type UpdateInfection func(infection *Infection)
 type CreateInfection func(updateInfection UpdateInfection)
-type EventFn func(event Event)
+type EventFn func(event *Event)
 
 type Person struct {
 	Name     string
@@ -18,8 +18,8 @@ type Person struct {
 	// Whether a person can infect another
 	Contagious bool
 	// Whether or not person stays at home or not
-	Active bool
-	Alive  bool
+	Sick  bool
+	Alive bool
 
 	createInfection  CreateInfection
 	persistInfection UpdateInfection
@@ -29,7 +29,6 @@ type Person struct {
 func NewPerson(createInfection CreateInfection, persistInfection UpdateInfection, events EventFn) *Person {
 	return &Person{
 		Name:             uuid.New().String(),
-		Active:           true,
 		Alive:            true,
 		createInfection:  createInfection,
 		persistInfection: persistInfection,
@@ -41,19 +40,31 @@ func (p *Person) Infect() {
 	if !p.Infected && !p.Immune {
 		p.createInfection(p.UpdateInfection)
 		p.Infected = true
-		p.events(INFECTED)
+		p.events(NewEvent(p.Name, INFECTED))
 	}
 }
 
 func (p *Person) Kill() {
 	p.Alive = false
-	p.events(DEATH)
+	p.events(NewEvent(p.Name, DEATH))
 }
 
 func (p *Person) UpdateInfection(infection *Infection) {
+	if !p.Contagious && infection.Contagious() {
+		p.Contagious = true
+		p.events(NewEvent(p.Name, CONTAGIOUS))
+	}
+
+	if p.Contagious && !infection.Contagious() {
+		p.Contagious = false
+		p.events(NewEvent(p.Name, UNCONTAGIOUS))
+	}
+
 	p.Contagious = infection.Contagious()
-	if infection.Active() || infection.Recovery() {
-		p.Active = false
+
+	if !p.Sick && infection.Active() {
+		p.Sick = true
+		p.events(NewEvent(p.Name, SICK))
 	}
 
 	if infection.Active() && infection.KillPatient() {
@@ -67,8 +78,8 @@ func (p *Person) UpdateInfection(infection *Infection) {
 
 	if infection.Complete() {
 		p.Infected = false
-		p.Active = true
-		p.events(RECOVERED)
+		p.Sick = false
+		p.events(NewEvent(p.Name, RECOVERED))
 		return
 	}
 
@@ -77,12 +88,12 @@ func (p *Person) UpdateInfection(infection *Infection) {
 
 func (p *Person) Status() string {
 	return fmt.Sprintf(
-		"Person %q: Infected %t, Contagious %t, Immune %t, Active %t, Alive %t",
+		"Person %q: Infected %t, Contagious %t, Immune %t, Sick %t, Alive %t",
 		p.Name,
 		p.Infected,
 		p.Contagious,
 		p.Immune,
-		p.Active,
+		p.Sick,
 		p.Alive,
 	)
 }
