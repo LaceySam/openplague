@@ -11,30 +11,32 @@ var (
 )
 
 type Infection struct {
-	Name                 string
-	MortalityProbability float64
-	IncubationPeriod     int
-	InfectiousIncubation bool
-	ActivePeriod         int
-	InfectiousActive     bool
-	RecoveryPeriod       int
-	InfectiousRecovery   bool
-	UpdateInfection      UpdateInfection
-	day                  int
+	Name                    string
+	MortalityProbability    float64
+	IncubationPeriod        int
+	InfectiousIncubation    bool
+	ActivePeriod            int
+	InfectiousActive        bool
+	RecoveryPeriod          int
+	InfectiousRecovery      bool
+	UpdateInfection         UpdateInfection
+	day                     int
+	TransmissionProbability float64
 }
 
 func NewInfection(virus *Virus, updateInfection UpdateInfection) *Infection {
 	// TODO(Sam): Slightly change values per infection here
 	return &Infection{
-		Name:                 virus.Name,
-		MortalityProbability: virus.MortalityProbability,
-		IncubationPeriod:     virus.IncubationPeriod,
-		InfectiousIncubation: virus.InfectiousIncubation,
-		ActivePeriod:         virus.ActivePeriod,
-		InfectiousActive:     virus.InfectiousActive,
-		RecoveryPeriod:       virus.RecoveryPeriod,
-		InfectiousRecovery:   virus.InfectiousRecovery,
-		UpdateInfection:      updateInfection,
+		Name:                    virus.Name,
+		MortalityProbability:    virus.MortalityProbability,
+		IncubationPeriod:        virus.IncubationPeriod,
+		InfectiousIncubation:    virus.InfectiousIncubation,
+		ActivePeriod:            virus.ActivePeriod,
+		InfectiousActive:        virus.InfectiousActive,
+		RecoveryPeriod:          virus.RecoveryPeriod,
+		InfectiousRecovery:      virus.InfectiousRecovery,
+		TransmissionProbability: virus.TransmissionProbability,
+		UpdateInfection:         updateInfection,
 	}
 }
 

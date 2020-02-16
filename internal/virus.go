@@ -16,7 +16,7 @@ type Virus struct {
 	InfectiousRecovery   bool
 
 	MortalityProbability    float64
-	transmissionProbability float64
+	TransmissionProbability float64
 	contagiousPeriod        int
 }
 
@@ -73,12 +73,12 @@ func (v *Virus) ContagiousPeriod() int {
 }
 
 func (v *Virus) CalculateTransmissionProbability(averageContacts int) float64 {
-	if v.transmissionProbability != 0 {
-		return v.transmissionProbability
+	if v.TransmissionProbability != 0 {
+		return v.TransmissionProbability
 	}
 
-	v.transmissionProbability = v.R0 / float64(v.ContagiousPeriod()*averageContacts)
-	return v.transmissionProbability
+	v.TransmissionProbability = v.R0 / float64(v.ContagiousPeriod()*averageContacts)
+	return v.TransmissionProbability
 }
 
 func (v *Virus) Desc() string {

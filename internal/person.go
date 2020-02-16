@@ -24,6 +24,8 @@ type Person struct {
 	createInfection  CreateInfection
 	persistInfection UpdateInfection
 	events           EventFn
+
+	Infection *Infection
 }
 
 func NewPerson(createInfection CreateInfection, persistInfection UpdateInfection, events EventFn) *Person {
@@ -50,6 +52,8 @@ func (p *Person) Kill() {
 }
 
 func (p *Person) UpdateInfection(infection *Infection) {
+	p.Infection = infection
+
 	if !p.Contagious && infection.Contagious() {
 		p.Contagious = true
 		p.events(NewEvent(p.Name, CONTAGIOUS))
@@ -80,6 +84,7 @@ func (p *Person) UpdateInfection(infection *Infection) {
 		p.Infected = false
 		p.Sick = false
 		p.events(NewEvent(p.Name, RECOVERED))
+		p.Infection = nil
 		return
 	}
 
