@@ -60,24 +60,17 @@ func (g *Group) Encounters() int {
 	return encounters
 }
 
-func (g *Group) Encounter(sick *Person) {
+func (g *Group) Encounter(sick *Person, general []*Person) {
 	// Random number of people from pool
 	encounters := g.Encounters()
 	encountered := 0
+	max := len(general)
 
 	for encountered < encounters {
-		pick := random.Intn(len(g.General))
-		i := 0
-		for _, target := range g.General {
-			i++
-			if i != pick {
-				continue
-			}
-
-			if random.Float64() < sick.Infection.TransmissionProbability {
-				target.Infect()
-			}
-
+		pick := random.Intn(max)
+		target := general[pick]
+		if random.Float64() < sick.Infection.TransmissionProbability {
+			target.Infect()
 		}
 
 		encountered++
@@ -85,8 +78,15 @@ func (g *Group) Encounter(sick *Person) {
 }
 
 func (g *Group) ProcessSickEncounters() {
+	general := make([]*Person, len(g.General))
+	i := 0
+	for _, person := range g.General {
+		general[i] = person
+		i++
+	}
+
 	for _, sick := range g.Contagious {
-		g.Encounter(sick)
+		g.Encounter(sick, general)
 	}
 
 	if !g.SickEncounters {
@@ -94,7 +94,7 @@ func (g *Group) ProcessSickEncounters() {
 	}
 
 	for _, sick := range g.Sick {
-		g.Encounter(sick)
+		g.Encounter(sick, general)
 	}
 }
 

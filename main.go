@@ -17,12 +17,12 @@ func main() {
 	fmt.Printf("Created %s\n\n", virus.Desc())
 
 	infectionManager := internal.NewInfectionManager(virus)
-	population := 10000
+	population := 100000
 	stats := internal.NewStatistics(population)
 
 	fmt.Println("Creating and Populating City")
 	//city := internal.NewCity(3.5e6, 1000, 1e6)
-	city := internal.NewCity(300, 10, 100)
+	city := internal.NewCity(50000, 100, 1000)
 	for i := 0; i < population; i++ {
 		person := internal.NewPerson(infectionManager.CreateInfection, infectionManager.PersistInfection, stats.Events)
 		eventFns := city.AddPerson(person)
