@@ -8,12 +8,11 @@ import (
 )
 
 func main() {
-	fmt.Println("Starting Plague Simulation!")
+	fmt.Println("Starting Pandemic Simulation!")
 
-	virusName := "COVID-19"
-
-	virus := internal.NewVirus(virusName, 3.2, 0.03, 14, true, 14, true, 7, true)
-	virus.CalculateTransmissionProbability(300)
+	//virus := internal.NewVirus("COVID-19", 3.2, 0.03, 14, true, 14, true, 7, true)
+	virus := internal.NewVirus("Swine Flu", 1.6, 0.0002, 4, true, 7, true, 7, false)
+	virus.CalculateTransmissionProbability(100)
 	fmt.Printf("Created %s\n\n", virus.Desc())
 
 	infectionManager := internal.NewInfectionManager(virus)

@@ -84,7 +84,7 @@ func (v *Virus) CalculateTransmissionProbability(averageContacts int) float64 {
 
 func (v *Virus) Desc() string {
 	return fmt.Sprintf(
-		"Virus %q: R0 %.2f, Contagious Period %d days, Mortality Rate %.2f",
+		"Virus %q: R0 %.2f, Contagious Period %d days, Mortality Rate %.5f",
 		v.Name,
 		v.R0,
 		v.ContagiousPeriod(),

@@ -111,7 +111,7 @@ type InfectionManager struct {
 }
 
 func NewInfectionManager(virus *Virus) *InfectionManager {
-	infections := make(chan *Infection, 1e6)
+	infections := make(chan *Infection, 1e7)
 
 	return &InfectionManager{
 		virus:      virus,
@@ -129,7 +129,7 @@ func (i *InfectionManager) PersistInfection(infection *Infection) {
 
 func (i *InfectionManager) ProcessDay() {
 	currentInfections := i.infections
-	i.infections = make(chan *Infection, 1e6)
+	i.infections = make(chan *Infection, 1e7)
 
 	for {
 		select {

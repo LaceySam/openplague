@@ -9,14 +9,16 @@ type Group struct {
 	AverageEncounters int
 	// When Sick can you still encounter people in this group
 	SickEncounters bool
+	MaxEncounters  int
 }
 
-func NewGroup(sickEncounters bool) *Group {
+func NewGroup(sickEncounters bool, maxEncounters int) *Group {
 	return &Group{
 		General:        map[string]*Person{},
 		Contagious:     map[string]*Person{},
 		Sick:           map[string]*Person{},
 		SickEncounters: sickEncounters,
+		MaxEncounters:  maxEncounters,
 	}
 }
 
@@ -53,8 +55,8 @@ func (g *Group) Encounters() int {
 	encounters := random.Intn(len(g.General))
 
 	// Set a maximium
-	if encounters > 250 {
-		encounters = 250
+	if encounters > g.MaxEncounters {
+		encounters = g.MaxEncounters
 	}
 
 	return encounters
@@ -106,25 +108,25 @@ type City struct {
 }
 
 func NewCity(householdCount int, commuteLineCount int, companyCount int) *City {
-	city := &City{Population: NewGroup(false)}
+	city := &City{Population: NewGroup(false, 100)}
 
 	households := make([]*Group, householdCount)
 	for i := 0; i < householdCount; i++ {
-		households[i] = NewGroup(true)
+		households[i] = NewGroup(true, 5)
 	}
 
 	city.HouseHolds = households
 
 	commuteLines := make([]*Group, commuteLineCount)
 	for i := 0; i < commuteLineCount; i++ {
-		commuteLines[i] = NewGroup(false)
+		commuteLines[i] = NewGroup(false, 50)
 	}
 
 	city.CommuteLines = commuteLines
 
 	companies := make([]*Group, companyCount)
 	for i := 0; i < companyCount; i++ {
-		companies[i] = NewGroup(false)
+		companies[i] = NewGroup(false, 50)
 	}
 
 	city.Companies = companies
