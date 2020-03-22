@@ -23,18 +23,18 @@ type Person struct {
 
 	createInfection  CreateInfection
 	persistInfection UpdateInfection
-	events           []EventFn
+	events           map[string]EventFn
 
 	Infection *Infection
 }
 
-func NewPerson(createInfection CreateInfection, persistInfection UpdateInfection, events EventFn) *Person {
+func NewPerson(createInfection CreateInfection, persistInfection UpdateInfection, events map[string]EventFn) *Person {
 	return &Person{
 		Name:             uuid.New().String(),
 		Alive:            true,
 		createInfection:  createInfection,
 		persistInfection: persistInfection,
-		events:           []EventFn{events},
+		events:           events,
 	}
 }
 
@@ -51,9 +51,14 @@ func (p *Person) Kill() {
 	p.Events(NewEvent(p.Name, DEATH))
 }
 
-func (p *Person) AddEventFns(eventFns []EventFn) {
-	eventFns = append(eventFns, p.events...)
-	p.events = eventFns
+func (p *Person) AddEventFns(eventFns map[string]EventFn) {
+	for id, eventFn := range eventFns {
+		p.events[id] = eventFn
+	}
+}
+
+func (p *Person) DeleteEventFn(id string) {
+	delete(p.events, id)
 }
 
 func (p *Person) Events(event *Event) {

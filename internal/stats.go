@@ -11,6 +11,7 @@ var (
 	INFECTED     = "infected"
 	CONTAGIOUS   = "contagious"
 	UNCONTAGIOUS = "uncontagious"
+	TRAVEL       = "travel"
 )
 
 type Event struct {

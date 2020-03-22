@@ -1,6 +1,9 @@
 package internal
 
 type Group struct {
+	ID string
+
+	All        map[string]*Person
 	General    map[string]*Person
 	Contagious map[string]*Person
 	Sick       map[string]*Person
@@ -14,6 +17,8 @@ type Group struct {
 
 func NewGroup(sickEncounters bool, maxEncounters int) *Group {
 	return &Group{
+		ID:             uuid.New().String(),
+		All:            map[string]*Person{},
 		General:        map[string]*Person{},
 		Contagious:     map[string]*Person{},
 		Sick:           map[string]*Person{},
@@ -22,8 +27,85 @@ func NewGroup(sickEncounters bool, maxEncounters int) *Group {
 	}
 }
 
+func (g *Group) ExtractGroup(sickEncounters bool, maxEncounters, count int) *Group {
+
+	group := NewGroup(sickEncounters, maxEncounters)
+	for i := 0; i < count; i++ {
+		person := g.PopPerson()
+		group.AddPerson(person)
+	}
+
+	return group
+}
+
+func (g *Group) Merge(group *Group) {
+	for name, person := range group.All {
+		g.All[name] = person
+	}
+
+	for name, person := range group.General {
+		g.General[name] = person
+	}
+
+	for name, person := range group.Contagious {
+		g.Contagious[name] = person
+	}
+
+	for name, person := range group.Sick {
+		g.Sick[name] = person
+	}
+}
+
 func (g *Group) AddPerson(person *Person) {
+	if !person.Alive {
+		return
+	}
+
+	g.All[person.Name] = person
+
+	if person.Contagious {
+		g.Contagious[person.Name] = person
+		return
+	}
+
+	if person.Sick {
+		g.Sick[person.Name] = person
+		return
+	}
+
 	g.General[person.Name] = person
+}
+
+func (g *Group) PopPerson(id string) *Person {
+	var key string
+	var person *Person
+
+	if id == "" {
+
+		pick := random.Intn(len(g.All))
+		i := 0
+
+		for key, person = range g.All {
+			if i == pick {
+				person = person
+				key = key
+				break
+			}
+
+			i++
+		}
+
+	} else {
+		key = id
+		person = g.All[key]
+	}
+
+	delete(g.All, key)
+	delete(g.General, key)
+	delete(g.Contagious, key)
+	delete(g.Sick, key)
+
+	return person
 }
 
 func (g *Group) Event(event *Event) {
@@ -41,9 +123,18 @@ func (g *Group) Event(event *Event) {
 		delete(g.Sick, event.Name)
 
 	case DEATH:
+		delete(g.All, event.Name)
 		delete(g.General, event.Name)
 		delete(g.Contagious, event.Name)
 		delete(g.Sick, event.Name)
+
+	case TRAVEL:
+		person := g.All[event.Name]
+		delete(g.All, event.Name)
+		delete(g.General, event.Name)
+		delete(g.Contagious, event.Name)
+		delete(g.Sick, event.Name)
+		person.DeleteEventFn(g.ID)
 	}
 }
 
@@ -101,14 +192,17 @@ func (g *Group) ProcessSickEncounters() {
 }
 
 type City struct {
+	Name         string
 	Population   *Group
 	HouseHolds   []*Group
 	CommuteLines []*Group
 	Companies    []*Group
+
+	Airport TransportationHub
 }
 
-func NewCity(householdCount int, commuteLineCount int, companyCount int) *City {
-	city := &City{Population: NewGroup(false, 100)}
+func NewCity(name string, householdCount int, commuteLineCount int, companyCount int) *City {
+	city := &City{Name: name, Population: NewGroup(false, 100)}
 
 	households := make([]*Group, householdCount)
 	for i := 0; i < householdCount; i++ {
@@ -183,4 +277,8 @@ func (c *City) AddPerson(person *Person) []EventFn {
 	}
 
 	return eventFns
+}
+
+func (c *City) ExtractGroup(sickEncounters bool, maxEncounters, count int) *Group {
+	return c.Population.ExtractGroup(sickEncounters, maxEncounters, count)
 }
